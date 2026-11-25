@@ -1,0 +1,28 @@
+/* Vision Action AI Custom Styles */
+.badge-status {
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.4em 0.7em;
+}
+.badge-status-PENDING { background-color: #6c757d; }
+.badge-status-PROCESSING { background-color: #0d6efd; }
+.badge-status-SUCCESS { background-color: #198754; }
+.badge-status-FAILURE { background-color: #dc3545; }
+
+.prediction-card {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    border-left: 4px solid #0d6efd;
+}
+.prediction-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+}
+
+.action-confidence-bar {
+    height: 12px;
+    border-radius: 6px;
+}
+.nav-pills .nav-link.active {
+    background-color: #0d6efd;
+    font-weight: 600;
+}

@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 950 620" width="100%" height="100%" style="background:#f8f9fa; font-family:'Segoe UI', AppleSDGothicNeo, sans-serif;">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#2b6cb0" />
+    </marker>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.1" />
+    </filter>
+  </defs>
+
+  <!-- Title -->
+  <text x="475" y="32" text-anchor="middle" font-size="20" font-weight="bold" fill="#1a202c">Vision AI 플랫폼 전체 시스템 아키텍처 (compose.yaml 5개 서비스)</text>
+
+  <!-- 1. Client Browser -->
+  <rect x="350" y="55" width="250" height="48" rx="8" fill="#ebf8ff" stroke="#3182ce" stroke-width="2" filter="url(#shadow)"/>
+  <text x="475" y="85" text-anchor="middle" font-size="15" font-weight="bold" fill="#2b6cb0">🖥️ 웹 브라우저 (사용자 / 관리자)</text>
+
+  <!-- Service 1: Django Backend -->
+  <rect x="30" y="150" width="260" height="200" rx="10" fill="#ffffff" stroke="#38a169" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="30" y="150" width="260" height="32" rx="10" fill="#38a169"/>
+  <text x="160" y="172" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">1. backend (Django &amp; DRF :8000)</text>
+  <rect x="45" y="195" width="230" height="36" rx="6" fill="#f0fff4" stroke="#9ae6b4"/>
+  <text x="160" y="218" text-anchor="middle" font-size="12" fill="#22543d">웹 화면 UI (영상 업로드 / IP 웹캠)</text>
+  <rect x="45" y="240" width="230" height="36" rx="6" fill="#f0fff4" stroke="#9ae6b4"/>
+  <text x="160" y="263" text-anchor="middle" font-size="12" fill="#22543d">DRF API (/api/v1/analyses/)</text>
+  <rect x="45" y="285" width="230" height="36" rx="6" fill="#f0fff4" stroke="#9ae6b4"/>
+  <text x="160" y="308" text-anchor="middle" font-size="12" fill="#22543d">Chart.js 모니터링 대시보드</text>
+
+  <!-- Service 2: Redis Broker -->
+  <rect x="350" y="170" width="250" height="85" rx="10" fill="#ffffff" stroke="#dd6b20" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="350" y="170" width="250" height="30" rx="10" fill="#dd6b20"/>
+  <text x="475" y="191" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">2. redis (Redis 7 :6379)</text>
+  <text x="475" y="225" text-anchor="middle" font-size="12" fill="#7b341e">비동기 작업 대기열 (Message Broker)</text>
+  <text x="475" y="243" text-anchor="middle" font-size="11" fill="#a0aec0">작업 큐 및 상태 캐시 저장소</text>
+
+  <!-- Service 3: Celery Worker -->
+  <rect x="350" y="295" width="250" height="155" rx="10" fill="#ffffff" stroke="#805ad5" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="350" y="295" width="250" height="30" rx="10" fill="#805ad5"/>
+  <text x="475" y="316" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">3. celery_worker (비동기 처리기)</text>
+  <rect x="365" y="335" width="220" height="32" rx="6" fill="#faf5ff" stroke="#d6bcfa"/>
+  <text x="475" y="356" text-anchor="middle" font-size="12" fill="#44337a">비동기 분석 실행 (tasks.py)</text>
+  <rect x="365" y="375" width="220" height="32" rx="6" fill="#faf5ff" stroke="#d6bcfa"/>
+  <text x="475" y="396" text-anchor="middle" font-size="12" fill="#44337a">IP 웹캠 8초 프레임 자동 수집</text>
+  <rect x="365" y="413" width="220" height="30" rx="6" fill="#faf5ff" stroke="#d6bcfa"/>
+  <text x="475" y="433" text-anchor="middle" font-size="11" fill="#44337a">스켈레톤 합성 영상 생성 (annotator)</text>
+
+  <!-- Service 4: FastAPI AI Service -->
+  <rect x="660" y="150" width="260" height="230" rx="10" fill="#ffffff" stroke="#3182ce" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="660" y="150" width="260" height="32" rx="10" fill="#3182ce"/>
+  <text x="790" y="172" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">4. ai_service (FastAPI :8001)</text>
+  <rect x="675" y="195" width="230" height="36" rx="6" fill="#ebf8ff" stroke="#bee3f8"/>
+  <text x="790" y="218" text-anchor="middle" font-size="12" fill="#2b6cb0">FastAPI 서버 (/predict/video)</text>
+  <rect x="675" y="240" width="230" height="36" rx="6" fill="#ebf8ff" stroke="#bee3f8"/>
+  <text x="790" y="263" text-anchor="middle" font-size="12" fill="#2b6cb0">YOLOv11 Pose 다중 인원 추적</text>
+  <rect x="675" y="285" width="230" height="36" rx="6" fill="#ebf8ff" stroke="#bee3f8"/>
+  <text x="790" y="308" text-anchor="middle" font-size="12" fill="#2b6cb0">30-Step 시퀀스 정규화 (1,140-D)</text>
+  <rect x="675" y="330" width="230" height="36" rx="6" fill="#ebf8ff" stroke="#bee3f8"/>
+  <text x="790" y="353" text-anchor="middle" font-size="12" font-weight="bold" fill="#2b6cb0">Random Forest (17개 동작 추론)</text>
+
+  <!-- Service 5: PostgreSQL & Media Volume -->
+  <rect x="180" y="480" width="590" height="110" rx="10" fill="#ffffff" stroke="#4a5568" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="180" y="480" width="590" height="30" rx="10" fill="#4a5568"/>
+  <text x="475" y="501" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">5. postgres &amp; Shared Volumes (영구 보존 스토리지)</text>
+  
+  <rect x="200" y="522" width="260" height="55" rx="6" fill="#edf2f7" stroke="#cbd5e0"/>
+  <text x="330" y="545" text-anchor="middle" font-size="12" font-weight="bold" fill="#2d3748">PostgreSQL 16 DB (pgdata 볼륨)</text>
+  <text x="330" y="563" text-anchor="middle" font-size="11" fill="#718096">AnalysisJob &amp; PersonPrediction 영구 저장</text>
+
+  <rect x="490" y="522" width="260" height="55" rx="6" fill="#edf2f7" stroke="#cbd5e0"/>
+  <text x="620" y="545" text-anchor="middle" font-size="12" font-weight="bold" fill="#2d3748">media_volume (공유 파일 볼륨)</text>
+  <text x="620" y="563" text-anchor="middle" font-size="11" fill="#718096">업로드 원본 영상 및 스켈레톤 합성 영상</text>
+
+  <!-- Flow Arrows -->
+  <!-- Client -> Django -->
+  <path d="M 400 103 L 240 150" stroke="#3182ce" stroke-width="2" fill="none" marker-end="url(#arrow)" />
+  <text x="290" y="120" font-size="11" font-weight="bold" fill="#2b6cb0">① 분석 요청</text>
+
+  <!-- Django -> Redis -->
+  <path d="M 290 215 L 342 215" stroke="#dd6b20" stroke-width="2" fill="none" marker-end="url(#arrow)" />
+  <text x="296" y="208" font-size="10" font-weight="bold" fill="#dd6b20">② 작업 등록</text>
+
+  <!-- Redis -> Celery -->
+  <path d="M 475 255 L 475 287" stroke="#805ad5" stroke-width="2" fill="none" marker-end="url(#arrow)" />
+  <text x="480" y="278" font-size="10" font-weight="bold" fill="#805ad5">③ 작업 수신</text>
+
+  <!-- Celery -> FastAPI -->
+  <path d="M 600 340 L 652 340" stroke="#3182ce" stroke-width="2" fill="none" marker-end="url(#arrow)" />
+  <text x="605" y="333" font-size="10" font-weight="bold" fill="#3182ce">④ 영상 전달</text>
+
+  <!-- FastAPI -> Celery -->
+  <path d="M 652 365 L 608 365" stroke="#38a169" stroke-width="2" fill="none" marker-end="url(#arrow)" />
+  <text x="612" y="380" font-size="10" font-weight="bold" fill="#38a169">⑤ JSON 결과</text>
+
+  <!-- Celery -> PostgreSQL -->
+  <path d="M 475 450 L 475 514" stroke="#4a5568" stroke-width="2" fill="none" marker-end="url(#arrow)" />
+  <text x="480" y="475" font-size="10" font-weight="bold" fill="#4a5568">⑥ 결과 DB 저장</text>
+
+  <!-- Client Polling -->
+  <path d="M 200 150 L 370 103" stroke="#718096" stroke-width="1.5" stroke-dasharray="4" fill="none" marker-end="url(#arrow)" />
+  <text x="280" y="142" font-size="10" fill="#718096">⑦ 상태 Polling (2초)</text>
+</svg>

@@ -1,0 +1,36 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "1. Run Django Web Server (Port 8000)",
+      "type": "shell",
+      "command": "/home/user1/ai_vision/subject10_pose_action/.venv/bin/python manage.py runserver 0.0.0.0:8000",
+      "options": {
+        "cwd": "${workspaceFolder}/backend"
+      },
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "2. Run FastAPI AI Server (Port 8001)",
+      "type": "shell",
+      "command": "/home/user1/ai_vision/subject10_pose_action/.venv/bin/uvicorn main:app --host 0.0.0.0 --port 8001 --reload",
+      "options": {
+        "cwd": "${workspaceFolder}/ai_service"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "3. Run Celery Worker",
+      "type": "shell",
+      "command": "/home/user1/ai_vision/subject10_pose_action/.venv/bin/celery -A config worker --loglevel=info --concurrency=2",
+      "options": {
+        "cwd": "${workspaceFolder}/backend"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

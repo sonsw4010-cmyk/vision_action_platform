@@ -1,0 +1,32 @@
+{
+  "total_training_clips": 2940,
+  "raw_clips": 255,
+  "classes": [
+    "body_slam",
+    "crouch_take_item",
+    "fall_backward",
+    "fall_forward",
+    "fall_sideways",
+    "front_kick",
+    "grab_shake",
+    "kiosk_tap",
+    "lie_backward",
+    "lie_forward",
+    "push",
+    "shotgun",
+    "sit_floor",
+    "sit_on_object",
+    "swing",
+    "throw_one_hand",
+    "vomit"
+  ],
+  "feature_count": 1226,
+  "sequence_steps": 30,
+  "n_estimators": 1000,
+  "class_weight": "balanced_subsample",
+  "unseen_subject_loso_accuracy": 0.851,
+  "unseen_subject_sideways_t02_accuracy": 0.8824,
+  "unseen_subject_macro_f1": 0.8509,
+  "augmentation": "stabilized_body_scale + idle_trim + flip + temporal_shift + yaw_pitch_foreshortening + stay_down_phase + 86d_day03_kinematics",
+  "updated_at": "2026-11-25 10:35:34"
+}

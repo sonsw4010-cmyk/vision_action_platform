@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}동작 분석 작업 등록 - Vision Action AI{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/app.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-0 rounded-3 mb-4">
+            <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+                <h4 class="fw-bold mb-1"><i class="bi bi-play-circle text-primary me-2"></i>새 분석 작업 생성</h4>
+                <p class="text-muted small">동작을 분석할 방식을 선택해 주세요</p>
+                
+                <ul class="nav nav-pills nav-fill mt-3" id="inputTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="upload-tab" data-bs-toggle="pill" data-bs-target="#tab-upload" type="button" role="tab">
+                            <i class="bi bi-file-earmark-play me-1"></i>영상 파일 업로드
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="camera-tab" data-bs-toggle="pill" data-bs-target="#tab-camera" type="button" role="tab">
+                            <i class="bi bi-webcam me-1"></i>IP Webcam
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body p-4">
+                <div class="tab-content" id="inputTabContent">
+                    <!-- 1. 영상 파일 업로드 탭 -->
+                    <div class="tab-pane fade show active" id="tab-upload" role="tabpanel">
+                        <form id="uploadJobForm" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="uploadTitle" class="form-label fw-semibold">작업 제목</label>
+                                <input type="text" class="form-control" id="uploadTitle" name="title" value="영상 업로드 분석" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="uploadFile" class="form-label fw-semibold">영상 파일 (.mp4, .avi, .mov)</label>
+                                <input type="file" class="form-control" id="uploadFile" name="video_file" accept="video/*" required>
+                            </div>
+                            <div class="mb-4">
+                                <label for="uploadExpected" class="form-label fw-semibold">예상 동작 (선택 사항)</label>
+                                <select class="form-select" id="uploadExpected" name="expected_action">
+                                    <option value="">-- 예상 동작 선택 (직접 학습한 17개) --</option>
+                                    <option value="kiosk_tap">키오스크 내려치기 (A001) (kiosk_tap)</option>
+                                    <option value="throw_one_hand">한손 물건 던지기 (A002) (throw_one_hand)</option>
+                                    <option value="front_kick">앞차기 (A003) (front_kick)</option>
+                                    <option value="grab_shake">잡고 흔들기 (A004) (grab_shake)</option>
+                                    <option value="push">밀치기 (A005) (push)</option>
+                                    <option value="swing">휘두르기 (A006) (swing)</option>
+                                    <option value="sit_floor">바닥에 앉기 (A007) (sit_floor)</option>
+                                    <option value="sit_on_object">위에 앉기 (A008) (sit_on_object)</option>
+                                    <option value="lie_forward">앞으로 눕기 (A009) (lie_forward)</option>
+                                    <option value="lie_backward">뒤로 눕기 (A010) (lie_backward)</option>
+                                    <option value="body_slam">몸통 박치기 (A011) (body_slam)</option>
+                                    <option value="crouch_take_item">쪼그려 물건 빼내기 (A012) (crouch_take_item)</option>
+                                    <option value="shotgun">샷건 (A013) (shotgun)</option>
+                                    <option value="vomit">구토 (A014) (vomit)</option>
+                                    <option value="fall_sideways">옆으로 쓰러지기 (A015) (fall_sideways)</option>
+                                    <option value="fall_backward">뒤로 넘어지기 (A016) (fall_backward)</option>
+                                    <option value="fall_forward">앞으로 넘어지기 (A017) (fall_forward)</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                                <i class="bi bi-upload me-1"></i>영상 분석 시작
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- 2. IP Webcam 스트리밍 탭 -->
+                    <div class="tab-pane fade" id="tab-camera" role="tabpanel">
+                        <form id="cameraJobForm">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="cameraTitle" class="form-label fw-semibold">작업 제목</label>
+                                <input type="text" class="form-control" id="cameraTitle" name="title" value="IP Webcam 실시간 분석" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="cameraUrl" class="form-label fw-semibold">카메라 스트림 URL</label>
+                                <div class="input-group">
+                                    <input type="url" class="form-control" id="cameraUrl" name="camera_url" placeholder="http://192.168.0.x:8080/video" required>
+                                    <button class="btn btn-outline-primary" type="button" id="btnTestCamera">
+                                        <i class="bi bi-broadcast me-1"></i>연결 테스트
+                                    </button>
+                                </div>
+                                <div class="form-text small text-muted">
+                                    스마트폰 IP Webcam 앱 맨 아래 <strong>Start server</strong>를 누른 후 표시되는 주소 뒤에 <code>/video</code>를 붙여 입력하세요.
+                                </div>
+                                                                <div id="cameraTestResult" class="alert small mt-2 d-none" role="alert"></div>
+
+                                <!-- 실시간 카메라 영상 미리보기 화면 (Skeleton Overlay 지원) -->
+                                <div id="cameraPreviewContainer" class="mt-3 d-none">
+                                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded border">
+                                        <div class="form-check form-switch mb-0">
+                                            <input class="form-check-input" type="checkbox" id="toggleSkeleton" checked>
+                                            <label class="form-check-label small fw-bold text-success" for="toggleSkeleton">
+                                                <i class="bi bi-person-lines-fill me-1"></i>실시간 스켈레톤 (Skeleton Overlay)
+                                            </label>
+                                        </div>
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                            <i class="bi bi-magic me-1"></i>YOLO-Pose AI ON
+                                        </span>
+                                    </div>
+                                    <div class="ratio ratio-16x9 rounded-3 overflow-hidden bg-black border shadow-sm position-relative">
+                                        <img id="cameraLivePreview" src="" alt="IP Webcam Stream" class="w-100 h-100" style="object-fit: contain;">
+                                    </div>
+                                    <div class="form-text small text-muted text-center mt-1">
+                                        <i class="bi bi-check-circle-fill text-success me-1"></i>실시간 관절(스켈레톤) 추정이 카메라 화면 위에 직접 렌더링됩니다!
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label for="cameraExpected" class="form-label fw-semibold">예상 동작 (선택 사항)</label>
+                                <select class="form-select" id="cameraExpected" name="expected_action">
+                                    <option value="">-- 예상 동작 선택 (직접 학습한 17개) --</option>
+                                    <option value="kiosk_tap">키오스크 내려치기 (A001) (kiosk_tap)</option>
+                                    <option value="throw_one_hand">한손 물건 던지기 (A002) (throw_one_hand)</option>
+                                    <option value="front_kick">앞차기 (A003) (front_kick)</option>
+                                    <option value="grab_shake">잡고 흔들기 (A004) (grab_shake)</option>
+                                    <option value="push">밀치기 (A005) (push)</option>
+                                    <option value="swing">휘두르기 (A006) (swing)</option>
+                                    <option value="sit_floor">바닥에 앉기 (A007) (sit_floor)</option>
+                                    <option value="sit_on_object">위에 앉기 (A008) (sit_on_object)</option>
+                                    <option value="lie_forward">앞으로 눕기 (A009) (lie_forward)</option>
+                                    <option value="lie_backward">뒤로 눕기 (A010) (lie_backward)</option>
+                                    <option value="body_slam">몸통 박치기 (A011) (body_slam)</option>
+                                    <option value="crouch_take_item">쪼그려 물건 빼내기 (A012) (crouch_take_item)</option>
+                                    <option value="shotgun">샷건 (A013) (shotgun)</option>
+                                    <option value="vomit">구토 (A014) (vomit)</option>
+                                    <option value="fall_sideways">옆으로 쓰러지기 (A015) (fall_sideways)</option>
+                                    <option value="fall_backward">뒤로 넘어지기 (A016) (fall_backward)</option>
+                                    <option value="fall_forward">앞으로 넘어지기 (A017) (fall_forward)</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100 py-2 fw-semibold">
+                                <i class="bi bi-camera-video me-1"></i>스트림 수집 및 분석 시작
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 실시간 진행 현황 카드 -->
+        <div id="liveProgressCard" class="card shadow-sm border-0 rounded-3 mb-4 d-none">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-activity text-primary me-2"></i>실시간 분석 진행 현황</h5>
+                    <span id="progressStatusBadge" class="badge badge-status badge-status-PENDING">대기 중</span>
+                </div>
+                <div id="progressMessage" class="my-3 text-muted small">
+                    <div class="spinner-border spinner-border-sm text-primary me-2"></div>작업 대기열에 등록되었습니다...
+                </div>
+                <a id="progressViewBtn" href="#" class="btn btn-outline-primary btn-sm w-100 mt-2 d-none">
+                    <i class="bi bi-search me-1"></i>상세 결과 보기
+                </a>
+            </div>
+        </div>
+
+        <!-- 교안 유의사항 안내 배너 -->
+        <div class="alert alert-secondary small border-0 shadow-sm" role="alert">
+            <i class="bi bi-info-circle-fill me-1 text-primary"></i>
+            <strong>안내:</strong> AI 모델의 예측 Label을 무조건 단정하지 마세요. 신뢰도(Confidence)와 유효 관절 프레임 수를 종합적으로 검토합니다.
+        </div>
+    </div>
+
+    <!-- 최근 작업 목록 -->
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-header bg-white border-0 pt-4 px-4 pb-2 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <h4 class="fw-bold mb-0"><i class="bi bi-clock-history text-secondary me-2"></i>분석 작업 목록</h4>
+                    {% if total_count %}
+                    <span class="badge bg-secondary-subtle text-secondary border rounded-pill">총 {{ total_count }}건</span>
+                    {% endif %}
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <form method="get" class="d-inline-block m-0">
+                        <select name="per_page" class="form-select form-select-sm" onchange="this.form.submit()" aria-label="페이지당 표시 개수">
+                            <option value="10" {% if per_page == 10 %}selected{% endif %}>10개씩</option>
+                            <option value="15" {% if per_page == 15 %}selected{% endif %}>15개씩</option>
+                            <option value="30" {% if per_page == 30 %}selected{% endif %}>30개씩</option>
+                            <option value="50" {% if per_page == 50 %}selected{% endif %}>50개씩</option>
+                        </select>
+                    </form>
+                    <a href="?page={{ page_obj.number }}&per_page={{ per_page }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-clockwise"></i> 새로고침</a>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                {% if jobs %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>제목</th>
+                                <th>방식</th>
+                                <th>상태</th>
+                                <th>결과</th>
+                                <th>등록시각</th>
+                                <th>상세</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for job in jobs %}
+                            <tr>
+                                <td><strong>{{ job.id }}</strong></td>
+                                <td>{{ job.title|truncatechars:18 }}</td>
+                                <td>
+                                    {% if job.input_type == 'upload' %}
+                                    <span class="badge bg-light text-dark border"><i class="bi bi-file-earmark"></i> 파일</span>
+                                    {% else %}
+                                    <span class="badge bg-light text-dark border"><i class="bi bi-camera"></i> 웹캠</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge badge-status badge-status-{{ job.status }}">
+                                        {{ job.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% with pred=job.predictions.first %}
+                                        {% if pred %}
+                                            <span class="fw-semibold text-primary">{{ pred.action_korean }}</span>
+                                            <small class="text-muted">({{ pred.confidence_pct|floatformat:1 }}%)</small>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
+                                <td class="small text-muted">{{ job.created_at|date:"m/d H:i" }}</td>
+                                <td>
+                                    <a href="/analyses/{{ job.id }}/" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if page_obj.paginator.num_pages > 1 %}
+                <div class="d-flex flex-wrap justify-content-between align-items-center mt-3 pt-2 border-top gap-2">
+                    <div class="small text-muted">
+                        전체 <strong>{{ total_count }}</strong>건 중 <strong>{{ page_obj.start_index }}–{{ page_obj.end_index }}</strong>번째 작업 ({{ page_obj.number }} / {{ page_obj.paginator.num_pages }} 페이지)
+                    </div>
+                    <nav aria-label="분석 작업 페이지 이동">
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                                <a class="page-link" href="{% if page_obj.has_previous %}?page=1&per_page={{ per_page }}{% else %}#{% endif %}" title="첫 페이지">&laquo;</a>
+                            </li>
+                            <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                                <a class="page-link" href="{% if page_obj.has_previous %}?page={{ page_obj.previous_page_number }}&per_page={{ per_page }}{% else %}#{% endif %}" title="이전 페이지">&lsaquo;</a>
+                            </li>
+                            {% for num in page_range %}
+                            <li class="page-item {% if num == page_obj.number %}active{% endif %}">
+                                <a class="page-link" href="?page={{ num }}&per_page={{ per_page }}">{{ num }}</a>
+                            </li>
+                            {% endfor %}
+                            <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                                <a class="page-link" href="{% if page_obj.has_next %}?page={{ page_obj.next_page_number }}&per_page={{ per_page }}{% else %}#{% endif %}" title="다음 페이지">&rsaquo;</a>
+                            </li>
+                            <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                                <a class="page-link" href="{% if page_obj.has_next %}?page={{ page_obj.paginator.num_pages }}&per_page={{ per_page }}{% else %}#{% endif %}" title="마지막 페이지">&raquo;</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+                {% else %}
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-inbox fs-1 mb-2"></i>
+                    <p>아직 등록된 분석 작업이 없습니다.<br>왼쪽 폼에서 첫 번째 영상 분석을 시작해 보세요!</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/analyses.js' %}"></script>
+{% endblock %}

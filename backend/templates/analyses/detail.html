@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}분석 작업 상세 #{{ job.id }} - Vision Action AI{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/app.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-12">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <a href="/analyses/" class="btn btn-outline-secondary btn-sm mb-2">
+                    <i class="bi bi-arrow-left me-1"></i>목록으로 돌아가기
+                </a>
+                <h3 class="fw-bold mb-0">분석 작업 #{{ job.id }}: {{ job.title }}</h3>
+            </div>
+            <div>
+                <span class="badge badge-status badge-status-{{ job.status }} fs-6">
+                    {{ job.get_status_display }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 좌측: 영상 및 작업 정보 -->
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0 rounded-3 mb-4">
+            <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+                <h5 class="fw-bold"><i class="bi bi-info-circle text-primary me-2"></i>작업 상세 정보</h5>
+            </div>
+            <div class="card-body p-4">
+                <table class="table table-borderless small mb-4">
+                    <tr>
+                        <th class="text-muted w-25">요청자</th>
+                        <td><strong>{{ job.user.username }}</strong></td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">입력 방식</th>
+                        <td>{{ job.get_input_type_display }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">요청 시각</th>
+                        <td>{{ job.created_at|date:"Y-m-d H:i:s" }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">완료 시각</th>
+                        <td>{{ job.completed_at|date:"Y-m-d H:i:s"|default:"-" }}</td>
+                    </tr>
+                    {% if job.expected_action %}
+                    <tr>
+                        <th class="text-muted">예상 동작</th>
+                        <td><span class="badge bg-secondary">{{ job.expected_action }}</span></td>
+                    </tr>
+                    {% endif %}
+                    {% if job.error_message %}
+                    <tr>
+                        <th class="text-danger">오류 사유</th>
+                        <td class="text-danger">{{ job.error_message }}</td>
+                    </tr>
+                    {% endif %}
+                </table>
+
+                <!-- 비디오 플레이어 (원본 및 스켈레톤 영상 탭) -->
+                {% if job.video_file or job.annotated_video %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-play-btn text-primary me-1"></i>분석 영상</h6>
+                    {% if job.annotated_video and job.video_file %}
+                    <ul class="nav nav-pills" id="videoTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active py-1 px-3 small fw-semibold" id="tab-annotated-btn" data-bs-toggle="pill" data-bs-target="#tab-annotated" type="button" role="tab">
+                                <i class="bi bi-magic me-1"></i>스켈레톤 영상
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link py-1 px-3 small text-secondary" id="tab-raw-btn" data-bs-toggle="pill" data-bs-target="#tab-raw" type="button" role="tab">
+                                <i class="bi bi-camera-video me-1"></i>원본 영상
+                            </button>
+                        </li>
+                    </ul>
+                    {% endif %}
+                </div>
+
+                <div class="tab-content" id="videoTabContent">
+                    {% if job.annotated_video %}
+                    <div class="tab-pane fade show active" id="tab-annotated" role="tabpanel">
+                        <div class="ratio ratio-16x9 rounded overflow-hidden bg-black mb-2 shadow-sm border">
+                            <video controls src="{{ job.annotated_video.url }}" class="w-100 h-100"></video>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="small text-success fw-bold"><i class="bi bi-check-circle-fill me-1"></i>YOLO-Pose 관절 스켈레톤 합성 완료</span>
+                            <a href="{{ job.annotated_video.url }}" download class="btn btn-sm btn-outline-success">
+                                <i class="bi bi-download me-1"></i>스켈레톤 영상 다운로드
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if job.video_file %}
+                    <div class="tab-pane fade {% if not job.annotated_video %}show active{% endif %}" id="tab-raw" role="tabpanel">
+                        <div class="ratio ratio-16x9 rounded overflow-hidden bg-black mb-2 shadow-sm border">
+                            <video controls src="{{ job.video_file.url }}" class="w-100 h-100"></video>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="small text-muted"><i class="bi bi-file-earmark-play me-1"></i>촬영/업로드 원본 영상</span>
+                            <a href="{{ job.video_file.url }}" download class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-download me-1"></i>원본 다운로드
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% elif job.camera_url %}
+                <div class="alert alert-info small">
+                    <i class="bi bi-camera-video me-1"></i>카메라 스트림 주소: <code>{{ job.camera_url }}</code>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 우측: 사람(Track ID)별 추론 결과 -->
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0 rounded-3 mb-4">
+            <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">
+                    <i class="bi bi-person-check text-success me-2"></i>사람별 동작 추론 결과
+                </h5>
+                <span class="badge bg-primary rounded-pill">{{ predictions|length }}명 검출</span>
+            </div>
+            <div class="card-body p-4">
+                {% if predictions %}
+                    {% for pred in predictions %}
+                    <div class="card prediction-card border-0 shadow-sm rounded-3 mb-3 p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-primary">
+                                <i class="bi bi-person-badge me-1"></i>Track #{{ pred.track_id }}
+                            </span>
+                            <span class="small text-muted">
+                                유효 프레임: <strong>{{ pred.valid_frames }}</strong> frames
+                            </span>
+                        </div>
+                        <h4 class="fw-bold text-dark my-2">
+                            {{ pred.action_korean }}
+                            <span class="badge bg-light text-secondary border fs-6 fw-normal">({{ pred.action_label }})</span>
+                        </h4>
+                        <div class="d-flex align-items-center justify-content-between mt-2">
+                            <span class="small fw-semibold text-muted">신뢰도 (Confidence)</span>
+                            <span class="fw-bold fs-5 text-primary">{{ pred.confidence|floatformat:1 }}%</span>
+                        </div>
+                        <div class="progress action-confidence-bar mt-1">
+                            <div class="progress-bar {% if pred.confidence >= 80 %}bg-success{% elif pred.confidence >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                 role="progressbar" 
+                                 style="width: {{ pred.confidence }}%;" 
+                                 aria-valuenow="{{ pred.confidence }}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-hourglass-split fs-1 mb-2"></i>
+                        <p>아직 추론 결과가 없습니다.<br>
+                        {% if job.status == 'PROCESSING' or job.status == 'PENDING' %}
+                            AI 추론이 진행 중입니다. 잠시만 기다려 주세요.
+                        {% else %}
+                            영상에서 인식된 사람이 없거나 분석이 실패했습니다.
+                        {% endif %}
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
